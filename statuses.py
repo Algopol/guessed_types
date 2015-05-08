@@ -13,6 +13,9 @@ def get_as_text(kw, field):
 
 
 def strip_url_protocol(url):
+    """
+    Strip the protocol of an URL
+    """
     if url.startswith('http://'):
         return url[7:]
     if url.startswith('https://'):
@@ -22,6 +25,11 @@ def strip_url_protocol(url):
 
 
 class StatusVector(dict):
+    """
+    A status vector represents the features of a status as a dictionnary-like
+    object.
+    """
+
     KEYS = "QUMTOARWS"
 
     def __init__(self, *args, **kwargs):
@@ -47,6 +55,11 @@ class StatusVector(dict):
 
 
 class ParsedStatus(object):
+    """
+    A ParsedStatus is a status for which we computed the features vector and
+    the guessed_type.
+    """
+
     NONGAMES_APPS = set([
         u"20minutes.fr",
         u"Actu Orange",
@@ -236,36 +249,11 @@ class ParsedStatus(object):
         'StatutErreur',
     ])
 
-    EGO_POSTS_TYPES = StringEnum([
-        "ELienSecAlter",
-        "ELienSecMention",
-        "ELienTexteAlter",
-        "ELienTexteMention",
-        "EPhotoSecheAlter",
-        "EPhotoSecheEMention",
-        "EPhotoTexteAlter",
-        "EPhotoTexteEMention",
-        "EVideoSecheAlter",
-        "EStatutAlter",
-        "EStatutEMention",
-        "EStatutEgo",
-        "EPhotoSecheE",
-        "ELienTexteEgo",
-        "EPhotoTexteE",
-        "ELienSecEgo",
-        "Etweet",
-        "EgoChangePP",
-        "EVideoSecheE",
-        "EPhotoSecheIdent",
-        "EaimePhoto",
-        "EaimeLienWebE",
-        "EpartPhoto",
-        "EpartLienWeb",
-        "EpartPhotoTexte",
-        "EidentifieEgo",
-    ])
-
     def __init__(self, eid, status_dict):
+        """
+        Create a new ParsedStatus, given the ego's ID and the status as a
+        dict.
+        """
         link = status_dict.get('link', {})
 
         self.eid = eid
@@ -282,6 +270,9 @@ class ParsedStatus(object):
         self.guessed_type = self.mkvector()
 
     def mkvector(self):
+        """
+        Compute the status' features vector and return its guessed_type.
+        """
         GT = ParsedStatus.GUESSED_TYPES
 
         self.vector = StatusVector()
@@ -735,23 +726,39 @@ class ParsedStatus(object):
         return re.search(regexp, self.original_story if original else self.story)
 
     def story_contains(self, *patterns, **opts):
+        """
+        Test if a story match at least one pattern.
+        """
         for pattern in patterns:
             if self._match_story(pattern, opts.get("original")):
                 return True
         return False
 
     def _match_url(self, domain, path=None):
+        """
+        Test if this status has an URL and if the domains and paths match.
+        """
         if not self.url or domain != self.url.netloc.split(':')[0]:
             return False
         return (path is None) or self.url.path == path
 
     def story_tags_contains(self, eid):
+        """
+        Test if the `story_tags` field contains the given ego id
+        """
         return {"type": "user", "id": eid} in self.story_tags
 
     def to_contains(self, eid):
+        """
+        Test if the `to` field contains the given ego id
+        """
         return {"id": eid} in self.to
 
     def nongame_app(self, app=None):
+        """
+        Test if this application is a non-game one (e.g. Facebook's own
+        applications, media websites, etc)
+        """
         if app is None:
             app = self.application
         if app is None:
@@ -768,6 +775,9 @@ class ParsedStatus(object):
 
 
 def parse_status(eid, s):
+    """
+    Return a ParsedStatus object for the given status
+    """
     if isinstance(s, ParsedStatus):
         return s
     return ParsedStatus(eid, s)
